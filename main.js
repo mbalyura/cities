@@ -12,6 +12,7 @@ const getCityRequestUrl = (city) => {
 };
 
 const cityInput = document.querySelector('.city-input');
+const cityForm = document.querySelector('.city-form');
 const citiesList = document.querySelector('.cities-list');
 
 const getLi = (text) => {
@@ -26,7 +27,7 @@ const renderCitiesList = (items) => {
 };
 
 const inputHandle = ({ target: { value } }) => {
-  console.log('inputHandle -> value', value);
+  // console.log('inputHandle -> value', value);
   if (value) {
     const url = getCityRequestUrl(value);
     $.ajax({
@@ -35,11 +36,26 @@ const inputHandle = ({ target: { value } }) => {
       crossDomain: true,
       dataType: 'jsonp'
     })
-    .done(({ response }) => renderCitiesList(response.items))
-    .fail((error) => console.error(error));
+      .done(({ response }) => renderCitiesList(response.items))
+      .fail((error) => console.error(error));
   } else {
     citiesList.innerHTML = '';
   }
 }
+const submitHandle = (e) => {
+  e.preventDefault();
+  const formData = new FormData(e.target);
+  const city = formData.get('city');
+  console.log('submitHandle -> city', city);
+
+};
 
 cityInput.addEventListener('input', inputHandle);
+cityForm.addEventListener('submit', submitHandle);
+
+ymaps.ready(() => {
+  const myMap = new ymaps.Map("map", {
+    center: [30, 20],
+    zoom: 2
+  });
+});
