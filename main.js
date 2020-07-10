@@ -26,36 +26,39 @@ const renderCitiesList = (items) => {
   cities.forEach((li) => citiesList.append(li));
 };
 
-const inputHandle = ({ target: { value } }) => {
-  // console.log('inputHandle -> value', value);
-  if (value) {
-    const url = getCityRequestUrl(value);
-    $.ajax({
-      url,
-      type: 'GET',
-      crossDomain: true,
-      dataType: 'jsonp'
-    })
-      .done(({ response }) => renderCitiesList(response.items))
-      .fail((error) => console.error(error));
-  } else {
-    citiesList.innerHTML = '';
-  }
-}
-const submitHandle = (e) => {
-  e.preventDefault();
-  const formData = new FormData(e.target);
-  const city = formData.get('city');
-  console.log('submitHandle -> city', city);
-
-};
-
-cityInput.addEventListener('input', inputHandle);
-cityForm.addEventListener('submit', submitHandle);
-
 ymaps.ready(() => {
-  const myMap = new ymaps.Map("map", {
+  const map = new ymaps.Map("map", {
     center: [30, 20],
     zoom: 2
   });
+
+  const inputHandle = ({ target: { value } }) => {
+    // console.log('inputHandle -> value', value);
+    if (value) {
+      const url = getCityRequestUrl(value);
+      $.ajax({
+        url,
+        type: 'GET',
+        crossDomain: true,
+        dataType: 'jsonp'
+      })
+        .done(({ response }) => renderCitiesList(response.items))
+        .fail((error) => console.error(error));
+    } else {
+      citiesList.innerHTML = '';
+    }
+  };
+
+  const submitHandle = (e) => {
+    e.preventDefault();
+    const formData = new FormData(e.target);
+    const city = formData.get('city');
+    // console.log('submitHandle -> city', city);
+    ymaps.geocode(city).then((res) => {
+      map.geoObjects.add(res.geoObjects.get(0));
+    });
+  };
+
+  cityInput.addEventListener('input', inputHandle);
+  cityForm.addEventListener('submit', submitHandle);
 });
