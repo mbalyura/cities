@@ -29,7 +29,8 @@ const renderCitiesList = (items) => {
 ymaps.ready(() => {
   const map = new ymaps.Map("map", {
     center: [30, 20],
-    zoom: 2
+    zoom: 2,
+    controls: [],
   });
 
   const inputHandle = ({ target: { value } }) => {
@@ -49,6 +50,28 @@ ymaps.ready(() => {
     }
   };
 
+  $("input").autocomplete({
+    source: (request, response) => {
+    console.log('response', response);
+    console.log('request', request);
+      $.ajax({
+        url: getCityRequestUrl(request.term),
+        type: 'GET',
+        crossDomain: true,
+        dataType: "jsonp",
+        success: (data) => {
+          const cities = data.response.items.map(({ title }) => (title));
+          response(cities);
+        }
+      });
+    },
+    minLength: 2,
+    select: (event, ui) => {
+      console.log('ui', ui);
+      console.log('event', event);
+    }
+  });
+
   const submitHandle = (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
@@ -59,6 +82,6 @@ ymaps.ready(() => {
     });
   };
 
-  cityInput.addEventListener('input', inputHandle);
+  // cityInput.addEventListener('input', inputHandle);
   cityForm.addEventListener('submit', submitHandle);
 });
