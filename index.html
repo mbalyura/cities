@@ -11,7 +11,7 @@
     type="text/javascript"></script>
   <link rel="stylesheet" href="https://stackpath.bootstrapcdn.com/bootswatch/4.5.0/yeti/bootstrap.min.css"
     integrity="sha384-chJtTd1EMa6hQI40eyJWF6829eEk4oIe7b3nNtUni7VxA3uHc/uIM/8ppyjrggfV" crossorigin="anonymous">
-  <link rel="stylesheet" href="//code.jquery.com/ui/1.12.1/themes/base/jquery-ui.css">
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/jqueryui/1.12.1/themes/base/jquery-ui.min.css">
   <title>Cities</title>
 </head>
 
@@ -21,13 +21,17 @@
       <div class="col-3">
         <div class="row">
           <form class="city-form w-100">
-            <input class="form-control city-input" name="city" type="text" placeholder="Default input">
+            <input class="form-control country-input mb-3" name="country" type="text" placeholder="input country">
+            <input class="form-control city-input mb-3" name="city" type="text" placeholder="input city" disabled>
+            <button  class="btn btn-primary" type="submit">Add</button >
           </form>
         </div>
-        <!-- <ul class="cities-list"></ul> -->
+        <div class="row">
+          <ul class="cities-list my-3 w-100"></ul>
+        </div>
       </div>
       <div class="col-9">
-        <div class="w-100" id="map" style="height: 700px"></div>
+        <div class="w-100" id="map" style="height: 90vh"></div>
       </div>
     </div>
   </div>
