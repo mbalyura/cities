@@ -11,17 +11,17 @@ const buildVkRequestUrl = (type, inputValue) => {
   const apiVersion = '5.120';
   const language = '0'; // ru
 
-  const methodsMap = {
+  const methodsMapper = {
     countries: 'database.getCountries',
     cities: 'database.getCities',
   };
-  const parametersMap = {
+  const parametersMapper = {
     countries: 'need_all=1&count=300',
     cities: `country_id=${state.activeCountryId || 1}&q=${inputValue}`
   };
 
-  const methodName = methodsMap[type];
-  const parameters = parametersMap[type];
+  const methodName = methodsMapper[type];
+  const parameters = parametersMapper[type];
 
   return `https://api.vk.com/method/${methodName}?${parameters}&lang=${language}&access_token=${accessToken}&v=${apiVersion}`;
 };
@@ -42,18 +42,6 @@ const cityInput = document.querySelector('.city-input');
 const cityForm = document.querySelector('.city-form');
 const citiesList = document.querySelector('.cities-list');
 
-const getLi = (text) => {
-  const li = document.createElement('li');
-  li.textContent = text;
-  return li;
-};
-
-const renderCitiesList = (cities) => {
-  citiesList.innerHTML = '';
-  const listItems = cities.map(getLi);
-  listItems.forEach((li) => citiesList.append(li));
-};
-
 ymaps.ready(() => {
   const map = new ymaps.Map("map", {
     center: [30, 20],
@@ -62,6 +50,36 @@ ymaps.ready(() => {
   });
 
   updateStateCountriesList();
+
+  const getLi = (text) => {
+    const span = document.createElement('span');
+    span.textContent = text;
+
+    const closeButton = document.createElement('button');
+    closeButton.textContent = 'x';
+    closeButton.classList.add('btn', 'btn-danger', 'mx-3', 'my-1');
+    closeButton.addEventListener('click', handleRemove(text))
+
+    const li = document.createElement('li');
+    li.append(span);
+    li.append(closeButton);
+    return li;
+  };
+
+  const renderCitiesList = (cities) => {
+    citiesList.innerHTML = '';
+    const listItems = cities.map(getLi);
+    listItems.forEach((li) => citiesList.append(li));
+  };
+
+  const handleRemove = (city) => (e) => {
+    ymaps.geocode(city).then((res) => {
+      console.log('handleClick -> res', res);
+      console.log('handleClick -> map', map);
+      map.geoObjects.remove(res.geoObjects.get(0));
+      console.log('handleClick -> map.geoObjects', map.geoObjects);
+    });
+  }
 
   $(".country-input").autocomplete({
     source: (request, response) => {
@@ -102,6 +120,7 @@ ymaps.ready(() => {
     renderCitiesList(state.addedCities);
     ymaps.geocode(`${country} ${city}`).then((res) => {
       map.geoObjects.add(res.geoObjects.get(0));
+    console.log('submitHandle -> res', res);
     });
   };
 
