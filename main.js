@@ -1,5 +1,3 @@
-console.warn('it works!')
-
 const state = {
   allCountriesList: [],
   activeCountryId: null,
@@ -9,7 +7,7 @@ const state = {
 const buildVkRequestUrl = (type, inputValue) => {
   const accessToken = '8b4cc71d8b4cc71d8b4cc71d0a8b3e304d88b4c8b4cc71dd44a30a94cb3c00c7e533a90';
   const apiVersion = '5.120';
-  const language = '0'; // ru
+  const language = '3'; // en
 
   const methodsMapper = {
     countries: 'database.getCountries',
@@ -26,7 +24,7 @@ const buildVkRequestUrl = (type, inputValue) => {
   return `https://api.vk.com/method/${methodName}?${parameters}&lang=${language}&access_token=${accessToken}&v=${apiVersion}`;
 };
 
-const updateStateCountriesList = () => {
+const getAllCountriesList = () => {
   const url = buildVkRequestUrl('countries');
     $.ajax({
       url,
@@ -44,21 +42,22 @@ const citiesList = document.querySelector('.cities-list');
 
 ymaps.ready(() => {
   const map = new ymaps.Map("map", {
-    center: [30, 20],
+    center: [15, 20],
     zoom: 2,
     controls: [],
   });
 
-  updateStateCountriesList();
+  getAllCountriesList();
 
-  const getLi = (text) => {
+  const getLi = (city) => {
     const span = document.createElement('span');
-    span.textContent = text;
+    const { countryName, cityName } = city;
+    span.textContent = cityName ? `${countryName}, ${cityName}` : countryName;
 
     const closeButton = document.createElement('button');
     closeButton.textContent = 'x';
     closeButton.classList.add('btn', 'btn-danger', 'mx-3', 'my-1');
-    closeButton.addEventListener('click', handleRemove(text))
+    closeButton.addEventListener('click', handleRemove(city))
 
     const li = document.createElement('li');
     li.append(span);
@@ -72,14 +71,11 @@ ymaps.ready(() => {
     listItems.forEach((li) => citiesList.append(li));
   };
 
-  const handleRemove = (city) => (e) => {
-    ymaps.geocode(city).then((res) => {
-      console.log('handleClick -> res', res);
-      console.log('handleClick -> map', map);
-      map.geoObjects.remove(res.geoObjects.get(0));
-      console.log('handleClick -> map.geoObjects', map.geoObjects);
-    });
-  }
+  const handleRemove = ({ cityName, cityGeoObj }) => (e) => {
+    map.geoObjects.remove(cityGeoObj);
+    state.addedCities = state.addedCities.filter(city => city.cityName !== cityName);
+    renderCitiesList(state.addedCities);
+  };
 
   $(".country-input").autocomplete({
     source: (request, response) => {
@@ -87,7 +83,7 @@ ymaps.ready(() => {
       const matchedCountries = countries.filter((country) => country.toLowerCase().startsWith(request.term.toLowerCase()));
       response(matchedCountries);
     },
-    minLength: 2,
+    minLength: 1,
     select: (_event, ui) => {
       const { id } = state.allCountriesList.find(({ title }) => title === ui.item.label);
       state.activeCountryId = id;
@@ -111,19 +107,19 @@ ymaps.ready(() => {
     minLength: 2,
   });
 
-  const submitHandle = (e) => {
+  const submitHandle = async (e) => {
     e.preventDefault();
     const formData = new FormData(e.target);
-    const country = formData.get('country');
-    const city = formData.get('city');
-    state.addedCities.push(city);
+    const countryName = formData.get('country');
+    const cityName = formData.get('city');
+    const res = await ymaps.geocode(`${countryName} ${cityName}`)
+    const cityGeoObj = res.geoObjects.get(0);
+    map.geoObjects.add(cityGeoObj);
+    state.addedCities.push({ countryName, cityName, cityGeoObj });
     renderCitiesList(state.addedCities);
-    ymaps.geocode(`${country} ${city}`).then((res) => {
-      map.geoObjects.add(res.geoObjects.get(0));
-    console.log('submitHandle -> res', res);
-    });
+    cityForm.reset();
+    cityInput.setAttribute('disabled', true);
   };
 
-  // cityInput.addEventListener('input', inputHandle);
   cityForm.addEventListener('submit', submitHandle);
 });
